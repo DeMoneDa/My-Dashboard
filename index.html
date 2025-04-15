@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,6 +24,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.6rem;
+      position: relative;
     }
     .card h2 {
       margin: 0;
@@ -48,33 +48,121 @@
       font-weight: bold;
       color: #555;
     }
+    .save-message {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: #d4edda;
+      color: #155724;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+      display: none;
+    }
+    #addCard {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background-color: #ffb703;
+      color: #fff;
+      font-size: 2rem;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      cursor: pointer;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 1rem;
+      line-height: 1;
+      text-align: center;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <h2>🧭 Career Library Blog</h2>
-    <div><span class="label">Focus:</span><br><textarea>Writing Design & Finance series</textarea></div>
-    <div><span class="label">Vibe:</span><br><textarea>Flowing like a calm river</textarea></div>
-    <div><span class="label">Note:</span><br><textarea>Think about a Career Quiz link</textarea></div>
-    <div><span class="label">Next Idea 💡:</span><br><textarea>Add a 'Resources' PDF button</textarea></div>
-  </div>
+  <button id="addCard">+</button>
+  <div class="save-message" id="saveMessage">Changes saved ✅</div>
 
-  <div class="card">
-    <h2>🌿 Stoic Reflection Generator</h2>
-    <div><span class="label">Focus:</span><br><textarea>Adding quotes & journaling prompts</textarea></div>
-    <div><span class="label">Vibe:</span><br><textarea>Grounded, peaceful</textarea></div>
-    <div><span class="label">Note:</span><br><textarea>Explore sharing to WhatsApp</textarea></div>
-    <div><span class="label">Next Idea 💡:</span><br><textarea>Nighttime reflection mode</textarea></div>
-  </div>
+  <script>
+    const saveMessage = document.getElementById('saveMessage');
+    const body = document.body;
+    const addBtn = document.getElementById('addCard');
 
-  <div class="card">
-    <h2>📚 Now & Then Series</h2>
-    <div><span class="label">Focus:</span><br><textarea>Lake Geneva chapter on relationships</textarea></div>
-    <div><span class="label">Vibe:</span><br><textarea>Nostalgic but lively</textarea></div>
-    <div><span class="label">Note:</span><br><textarea>Add daughter’s quotes directly</textarea></div>
-    <div><span class="label">Next Idea 💡:</span><br><textarea>Maybe include audio snippets?</textarea></div>
-  </div>
+    function createCard(id, data = {}) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.id = id;
+
+      card.innerHTML = `
+        <button class="delete-btn" title="Remove">×</button>
+        <h2 contenteditable="true">${data.title || 'Untitled Project'}</h2>
+        <div><span class="label">Focus:</span><br><textarea>${data.focus || ''}</textarea></div>
+        <div><span class="label">Vibe:</span><br><textarea>${data.vibe || ''}</textarea></div>
+        <div><span class="label">Note:</span><br><textarea>${data.note || ''}</textarea></div>
+        <div><span class="label">Next Idea 💡:</span><br><textarea>${data.next || ''}</textarea></div>
+      `;
+
+      card.querySelectorAll('textarea, h2').forEach(el => {
+        el.addEventListener('input', () => saveCards());
+      });
+
+      card.querySelector('.delete-btn').addEventListener('click', () => {
+        card.remove();
+        saveCards();
+      });
+
+      return card;
+    }
+
+    function saveCards() {
+      const cards = document.querySelectorAll('.card');
+      const data = Array.from(cards).map(card => {
+        return {
+          id: card.dataset.id,
+          title: card.querySelector('h2').textContent,
+          focus: card.querySelectorAll('textarea')[0].value,
+          vibe: card.querySelectorAll('textarea')[1].value,
+          note: card.querySelectorAll('textarea')[2].value,
+          next: card.querySelectorAll('textarea')[3].value,
+        };
+      });
+      localStorage.setItem('myProjectCards', JSON.stringify(data));
+      showSaveMessage();
+    }
+
+    function loadCards() {
+      const saved = JSON.parse(localStorage.getItem('myProjectCards') || '[]');
+      saved.forEach(card => {
+        body.insertBefore(createCard(card.id, card), addBtn);
+      });
+    }
+
+    function showSaveMessage() {
+      saveMessage.style.display = 'block';
+      setTimeout(() => saveMessage.style.display = 'none', 1000);
+    }
+
+    addBtn.addEventListener('click', () => {
+      const newId = Date.now().toString();
+      const newCard = createCard(newId);
+      body.insertBefore(newCard, addBtn);
+      saveCards();
+    });
+
+    loadCards();
+  </script>
 
 </body>
 </html>
